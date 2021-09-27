@@ -1,0 +1,10 @@
+[
+	{
+		"file_type": "adflow_utils",
+		"file_name": "n0021_ks_e3-5.out",
+		"file_properties": {
+			"group_by": "reynolds",
+			"name": "ks=3e-5"
+		}
+	}
+]

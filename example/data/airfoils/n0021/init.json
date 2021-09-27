@@ -1,0 +1,5 @@
+{
+	"name": "NACA 0021",
+	"description": "A 4-series Naca Airfoil with thickness=21%",
+	"comment": "this is a very nice airfoil."
+}
