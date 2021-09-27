@@ -33,6 +33,17 @@ class Airfoil(Object):
         except ObjectNotFound:
             self.polars = None
 
+    def __str__(self) -> str:
+        available_polars = self.polars.__str__() # type:ignore
+
+        string = f'AIRFOIL\n' \
+                 f'Name: \t\t{self.name}\n' \
+                 f'Description:\t{self.description}\n' \
+                 f'Comment:\t{self.comment}\n' \
+                 f'Polars: \t{available_polars}\n'
+
+        return string
+
 
 class AirfoilList(ObjectList):
     list_type = Airfoil

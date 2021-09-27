@@ -20,6 +20,16 @@ class AerodynamicPolar(Polar):
         self.description = description
         self.comment = comment
 
+    def __str__(self) -> str:
+        available_polars = super().__str__()
+        string = f'AERODYNAMIC POLAR\n' \
+                 f'Name: \t\t{self.name}\n' \
+                 f'Solver:\t\t{self.solver}\n' \
+                 f'Description:\t{self.description}\n' \
+                 f'Comment: \t{self.comment}\n' \
+                 f'Available data:\t{available_polars}\n'
+        return string
+
 
 def load_file(path, properties):
     """ This is just a dummy function for loading a specific polar"""
@@ -159,8 +169,8 @@ def load_adflow_utils(path, properties):
         last_split = new_split
 
         unique_name = f'{properties["name"]}_{group_by}_{polar[group_by][0]}'
-        unique_name = re.sub("[^0-9a-zA-Z]+", "", unique_name)
-        polars[unique_name] =  AerodynamicPolar(polar, name=properties["name"],
+        unique_name_clean = re.sub("[^0-9a-zA-Z]+", "", unique_name)
+        polars[unique_name_clean] =  AerodynamicPolar(polar, name=unique_name,
                 solver="ADflow", solver_options=aero_options)
 
     return polars
