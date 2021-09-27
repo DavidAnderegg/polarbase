@@ -1,5 +1,6 @@
 import os
 import re
+import matplotlib.pyplot as plt
 
 from polarbase.objects import Object, ObjectList, Polar
 from polarbase.utils import str2number, str2value
@@ -29,6 +30,15 @@ class AerodynamicPolar(Polar):
                  f'Comment: \t{self.comment}\n' \
                  f'Available data:\t{available_polars}\n'
         return string
+
+    def plot(self, x='alpha', y='cl', axes=None):
+        if axes is None:
+            axes = plt.gca()
+
+        axes.plot(self.polar_dict[x], self.polar_dict[y])
+        axes.set_ylabel(y)
+        axes.set_xlabel(x)
+
 
 
 def load_file(path, properties):
@@ -182,7 +192,7 @@ load_switcher = {
 lsk = list(load_switcher.keys())
 
 class PolarList(ObjectList):
-    list_type = Polar
+    list_type = AerodynamicPolar
     init_json_scheme = {
                 "type": "array",
                 "uniqueItems": True,
@@ -209,3 +219,8 @@ class PolarList(ObjectList):
             func = load_switcher.get(file_type, load_file)
             polars = func(file_path, file_properties)
             self.container.update(polars)
+
+    def plot(self, x='alpha', y='cl', axes=None):
+        print(self.container)
+        for polar in self.container.values():
+            polar.plot(x, y, axes)
