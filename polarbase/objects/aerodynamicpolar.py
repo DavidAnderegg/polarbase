@@ -1,9 +1,9 @@
 import os
-import re
 import matplotlib.pyplot as plt
+import numpy as np
 
-from polarbase.objects import Object, ObjectList, Polar
-from polarbase.utils import str2number, str2value
+from ..objects import ObjectList, Polar
+from ..utils import str2number, str2value
 
 
 class LoadPolarError(Exception):
@@ -11,9 +11,9 @@ class LoadPolarError(Exception):
 
 
 class AerodynamicPolar(Polar):
-    def __init__(self, polar_dict, name=None, solver=None, solver_options=None,
-            description=None, comment=None):
-        super().__init__(polar_dict)
+    def __init__(self, polar_dict, parent, name=None, solver=None,
+                 solver_options=None, description=None, comment=None):
+        super().__init__(polar_dict, parent)
 
         self.name = name
         self.solver = solver
@@ -25,6 +25,7 @@ class AerodynamicPolar(Polar):
         available_polars = super().__str__()
         string = f'AERODYNAMIC POLAR\n' \
                  f'Name: \t\t{self.name}\n' \
+                 f'Parent Name: \t{self.parent.name}\n' \
                  f'Solver:\t\t{self.solver}\n' \
                  f'Description:\t{self.description}\n' \
                  f'Comment: \t{self.comment}\n' \
@@ -39,13 +40,18 @@ class AerodynamicPolar(Polar):
         axes.set_ylabel(y)
         axes.set_xlabel(x)
 
+    def between(self, min_val, max_val, key='alpha'):
+        if key not in self.polar_dict.keys():
+            return self
+        return super().between(min_val, max_val, key)
 
 
-def load_file(path, properties):
+def load_file(path, properties, parent):
     """ This is just a dummy function for loading a specific polar"""
     return dict()
 
-def load_adflow_utils(path, properties):
+
+def load_adflow_utils(path, properties, parent):  # noqa: max-complexity: 30
     """ This function loads polars that were written by the package
     "adflow_utils"
 
@@ -132,7 +138,10 @@ def load_adflow_utils(path, properties):
                 else:
                     results[key] = [item]
 
-        return results
+        # make all list np.ndarray's
+        np_results = {key: np.array(value) for key, value in results.items()}
+
+        return np_results
 
     def find_group_by_splits(group_by_list):
         splits = list()
@@ -157,7 +166,7 @@ def load_adflow_utils(path, properties):
     # find the polar data and read it
     n_results_header, n_results_start = find_results(file_lines)
     polars_raw = read_results(file_lines[n_results_start:],
-            file_lines[n_results_header])
+                              file_lines[n_results_header])
 
     # find the split positions
     # if the data should not be split, the split position is at the end of the
@@ -166,8 +175,8 @@ def load_adflow_utils(path, properties):
     if group_by is None:
         group_by = list(polars_raw.keys())[0]
     if group_by not in polars_raw:
-        raise(LoadPolarError(f'Group "{group_by:s}" could not be found' \
-                f' in "{path:s}"'))
+        raise(LoadPolarError(f'Group "{group_by:s}" could not be found'
+                             f' in "{path:s}"'))
     splits = find_group_by_splits(polars_raw[group_by])
 
     # create the polar-objects based on the splits
@@ -175,13 +184,13 @@ def load_adflow_utils(path, properties):
     last_split = 0
     for new_split in splits:
         polar = {key: polars_raw[key][last_split:new_split] for key in
-                polars_raw.keys()}
+                 polars_raw.keys()}
         last_split = new_split
 
         unique_name = f'{properties["name"]}_{group_by}_{polar[group_by][0]}'
-        unique_name_clean = re.sub("[^0-9a-zA-Z]+", "", unique_name)
-        polars[unique_name_clean] =  AerodynamicPolar(polar, name=unique_name,
-                solver="ADflow", solver_options=aero_options)
+        polars[unique_name] = AerodynamicPolar(polar, parent, name=unique_name,
+                                               solver="ADflow",
+                                               solver_options=aero_options)
 
     return polars
 
@@ -191,6 +200,7 @@ load_switcher = {
         }
 lsk = list(load_switcher.keys())
 
+
 class PolarList(ObjectList):
     list_type = AerodynamicPolar
     init_json_scheme = {
@@ -199,9 +209,8 @@ class PolarList(ObjectList):
                 "items": {
                     "type": "object",
                     "properties": {
-                        "file_type": {"anyOf":
-                            [{'const': lsk[i]} for i in range(len(lsk))]
-                            },
+                        "file_type": {"anyOf": [{'const': lsk[i]} for i in
+                                                range(len(lsk))]},
                         "file_name": {"type": "string"},
                         "file_properties": {"type": "object"},
                         },
@@ -217,10 +226,11 @@ class PolarList(ObjectList):
             file_path = os.path.join(path, file_name)
 
             func = load_switcher.get(file_type, load_file)
-            polars = func(file_path, file_properties)
+            polars = func(file_path, file_properties, self.parent)
             self.container.update(polars)
 
+    def between(self, min_val, max_val, filter_key='reynolds'):
+        return super().between(min_val, max_val, filter_key)
+
     def plot(self, x='alpha', y='cl', axes=None):
-        print(self.container)
-        for polar in self.container.values():
-            polar.plot(x, y, axes)
+        return super().plot(x, y, axes=axes)

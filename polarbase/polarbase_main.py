@@ -1,7 +1,6 @@
 import os
-import sys
-
 from polarbase.objects import folder_names, ObjectNotFound
+
 
 class PolarBase(object):
     def __init__(self, database_path):
@@ -23,11 +22,7 @@ class PolarBase(object):
         for folder in os.listdir(database_path):
             if folder in folder_names.keys():
                 self._objects[folder] = folder_names[folder](
-                        os.path.join(database_path, folder))
-
-
-
-
+                        os.path.join(database_path, folder), self)
 
 
 if __name__ == '__main__':

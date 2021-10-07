@@ -1,8 +1,7 @@
 import os
-from attr import NOTHING
 import numpy as np
 
-from .objects import Object, ObjectList, ObjectNotFound
+from .objects import Object, ObjectNotFound, ObjectList
 from .aerodynamicpolar import PolarList
 
 
@@ -23,18 +22,19 @@ class Airfoil(Object):
             }
 
     def load(self, path):
-        self.name =         self.init_json.get('name')
-        self.description =  self.init_json.get('description')
-        self.comment =      self.init_json.get('comment')
+        self.name = self.init_json.get('name')
+        self.description = self.init_json.get('description')
+        self.comment = self.init_json.get('comment')
 
-        # self.geometry = AirfoilGeometry(os.path.join(path, 'geometry'))
+        # self.polars = dict{}
+
         try:
-            self.polars = PolarList(os.path.join(path, 'polars'))
+            self.polars = PolarList(os.path.join(path, 'polars'), self)
         except ObjectNotFound:
             self.polars = None
 
     def __str__(self) -> str:
-        available_polars = self.polars.__str__() # type:ignore
+        available_polars = self.polars.__str__()  # type:ignore
 
         string = f'AIRFOIL\n' \
                  f'Name: \t\t{self.name}\n' \

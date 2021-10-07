@@ -14,7 +14,8 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 setup(
     name="polarbase",
     version=__version__,
-    description="""polarBase is a simple Database to organize various polars""",
+    description="""polarBase is a simple Database to organize various
+    polars""",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords="database polar",
